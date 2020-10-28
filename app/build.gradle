@@ -1,0 +1,161 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-kapt'
+apply plugin: 'android-aspectjx'
+apply plugin: 'kotlin-android-extensions'
+android {
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+    useLibrary 'org.apache.http.legacy'
+
+    compileSdkVersion rootProject.ext.android["compileSdkVersion"]
+    buildToolsVersion rootProject.ext.android["buildToolsVersion"]
+    defaultConfig {
+        applicationId "com.shop.mall"
+        minSdkVersion rootProject.ext.android["minSdkVersion"]
+        targetSdkVersion rootProject.ext.android["targetSdkVersion"]
+        versionCode rootProject.ext.android["versionCode"]
+        versionName rootProject.ext.android["versionName"]
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        //启用 Dalvik 可执行文件分包
+        multiDexEnabled true
+        ndk {
+            abiFilters "armeabi-v7a", "x86"// ,"armeabi" //,"arm64-v8a"//
+        }
+    }
+
+    buildTypes {
+        debug {
+            //versionName自定义后缀
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-DEBUG'
+            resValue "string", "app_name", "demo"
+            buildConfigField "boolean", "LOG_DEBUG", "true"
+            buildConfigField "boolean", "USE_CANARY", "true"
+            buildConfigField "String", "BASE_URL", "\"http://120.26.50.233:8383/\"" //测试服务器
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            manifestPlaceholders = [
+                    BUGLY_APPID: "7c93af3d46",
+//                    JPUSH_APPKEY       : "63c21a78832635c8e22b5ab9",
+//                    JPUSH_CHANNEL      : "developer-default",
+            ]
+        }
+        release {
+            buildConfigField "boolean", "LOG_DEBUG", "false"
+            buildConfigField "boolean", "USE_CANARY", "false"
+            buildConfigField "String", "BASE_URL", "\"http://xftobpay.xianfengsg.com/\"" //正式
+
+            minifyEnabled false
+            shrinkResources false
+            zipAlignEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            manifestPlaceholders = [
+                    BUGLY_APPID: "7c93af3d46",
+//                    JPUSH_APPKEY       : "63c21a78832635c8e22b5ab9",
+//                    JPUSH_CHANNEL      : "developer-default",
+            ]
+        }
+    }
+    dexOptions {
+        javaMaxHeapSize "4g"
+    }
+    applicationVariants.all { variant ->
+        variant.outputs.each { output ->
+            def variantName
+            if ('debug'.equals(variant.buildType.name)) {
+                variantName = "debug"
+            } else {
+                variantName = "release"
+            }
+            output.outputFileName = "_${variant.flavorName}_v${variant.versionName}_${variant.versionCode}_${buildTime()}_${variantName}.apk"
+        }
+    }
+}
+
+def buildTime() {
+    def date = new Date()
+    def formatDate = date.format('yyMMddHHmmss')
+    return formatDate
+}
+
+dependencies {
+    implementation fileTree(dir: "libs", include: ["*.jar"])
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation 'androidx.core:core-ktx:1.1.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    implementation 'me.jessyan:arms:2.5.2'
+    implementation rootProject.ext.dependencies["autosize"]
+    implementation 'me.jessyan:arms-imageloader-glide:2.5.2'
+
+    //test
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    debugImplementation rootProject.ext.dependencies["canary-debug"]
+    releaseImplementation rootProject.ext.dependencies["canary-release"]
+    testImplementation rootProject.ext.dependencies["canary-release"]
+
+    //aop
+    implementation 'org.aspectj:aspectjrt:1.8.9'
+    //kt协程
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$kotlin_coroutines"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$kotlin_coroutines"
+    //tools
+    implementation rootProject.ext.dependencies["eventbus"]
+    kapt rootProject.ext.dependencies["eventbus-apt"]
+    implementation rootProject.ext.dependencies["android-utils"]
+    implementation rootProject.ext.dependencies["anko"]
+    // 数据库
+    debugImplementation rootProject.ext.dependencies["objectbox-browser"]
+    releaseImplementation rootProject.ext.dependencies["objectbox"]
+    kapt rootProject.ext.dependencies["objectbox-processor"]
+    implementation rootProject.ext.dependencies["objectbox-rxjava"]
+
+    //dagger2
+    api rootProject.ext.dependencies["dagger2"]
+    api rootProject.ext.dependencies["dagger2-android"]
+    api rootProject.ext.dependencies["dagger2-android-support"]
+    kapt rootProject.ext.dependencies["dagger2-android-processor"]
+    kapt rootProject.ext.dependencies["dagger2-compiler"]
+
+    //进度条管理
+    implementation rootProject.ext.dependencies["progressmanager"]
+    implementation rootProject.ext.dependencies["retrofit-url-manager"]
+    implementation rootProject.ext.dependencies["lifecyclemodel"]
+    implementation rootProject.ext.dependencies["retrofit-url-manager"]
+
+    //view
+    //内含封装好的popupwindow  dialog等控件 https://github.com/li-xiaojun/XPopup
+    implementation 'com.lxj:xpopup:2.0.0'
+    implementation 'com.kaopiz:kprogresshud:1.2.0'//仿ios加载框
+    implementation 'com.wuhenzhizao:titlebar:1.1.4'//android - titlebar
+    implementation rootProject.ext.dependencies["calendarview"]
+    implementation rootProject.ext.dependencies["pickerview"]
+    implementation 'cn.bingoogolapple:bga-banner:3.0.0@aar'
+    //https://bintray.com/franticn/TabLayout/FlycoTabLayout
+    implementation 'com.flyco.tablayout:FlycoTabLayout_Lib:2.1.2@aar'
+    //支持圆角的imageView https://github.com/vinc3m1/RoundedImageView
+    implementation 'com.makeramen:roundedimageview:2.3.0'
+    // 知乎的图片选择器
+    implementation 'com.zhihu.android:matisse:0.5.3-beta3'
+    //下拉刷新和上拉加载更多的控件
+    implementation 'com.scwang.smartrefresh:SmartRefreshLayout:1.1.2'
+    implementation "com.android.support:support-annotations:28.0.0"
+    implementation 'com.github.lihangleo2:ShadowLayout:2.1.8'
+    implementation 'com.google.zxing:core:3.3.0'
+    implementation(rootProject.ext.dependencies["butterknife"])
+    annotationProcessor rootProject.ext.dependencies["butterknife-compiler"]
+    annotationProcessor rootProject.ext.dependencies["dagger2-compiler"]//依赖插件
+}
+kapt {
+    arguments {
+        arg('eventBusIndex', 'com.shop.mall.MyEventBusIndex')
+    }
+}
+apply plugin: 'io.objectbox' // 如果依赖了objectbrowser objectbox的插件必须在dependencies之后
+
